@@ -1,0 +1,4 @@
+interface:
+  display_name: "SSH Remote Dev"
+  short_description: "Inspect, edit, and test remote projects over SSH"
+  default_prompt: "Use $ssh-remote-dev to inspect a project on a remote server, apply changes safely, and run targeted validation over SSH."
