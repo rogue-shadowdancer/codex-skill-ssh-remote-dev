@@ -1,4 +1,4 @@
-# ssh-remote-dev-skill
+# codex-skill-ssh-remote-dev
 
 `ssh-remote-dev` is a Codex skill for inspecting, editing, syncing, and testing code on a remote Linux or POSIX host over SSH.
 
