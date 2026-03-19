@@ -41,6 +41,18 @@ Install the skill contents into your Codex skills directory as `ssh-remote-dev`.
 - `references/`
 - `scripts/`
 
+Install from GitHub with Codex `skill-installer`:
+
+```bash
+python3 "$CODEX_HOME/skills/.system/skill-installer/scripts/install-skill-from-github.py" \
+  --repo rogue-shadowdancer/codex-skill-ssh-remote-dev \
+  --path . \
+  --name ssh-remote-dev
+```
+
+Because this skill lives at the repository root, `--name ssh-remote-dev` is required when using `--path .`.
+Restart Codex after installation so the new skill is discovered.
+
 macOS/Linux validation setup:
 
 ```bash
