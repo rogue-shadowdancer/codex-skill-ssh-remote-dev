@@ -1,4 +1,3 @@
 __pycache__/
-*.pyc
-tmp/
-skills/
+*.py[cod]
+.venv/

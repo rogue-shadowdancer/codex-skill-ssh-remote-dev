@@ -9,6 +9,8 @@ Operate on a remote project through `ssh` and `scp` while keeping edits local-fi
 
 Default to SSH keys or aliases. If the user only has a password, use the same wrapper scripts with `-Password`; they fall back to the bundled `paramiko` helper instead of OpenSSH batch mode.
 
+Use the bundled Python wrappers on macOS/Linux and the PowerShell wrappers on Windows PowerShell. The helper behavior is intentionally aligned across platforms.
+
 Assume the remote host is POSIX-like and has `sh`, `cp`, `mv`, `mkdir`, `ssh`, and `scp` available. If the target is Windows-only, WinRM-only, or lacks a POSIX shell, do not use this skill unchanged.
 
 ## Quick Start
@@ -17,8 +19,8 @@ Assume the remote host is POSIX-like and has `sh`, `cp`, `mv`, `mkdir`, `ssh`, a
 2. Gather three inputs up front: `Target`, remote project root, and the smallest useful validation command.
 3. Inspect before editing: confirm repo root, branch, dirty state, and whether the host is production-like.
 4. Stage only the files you need under `tmp/ssh-remote-dev/<target>/...`.
-5. Use `scripts/ssh_fetch.ps1` to copy remote files locally, edit locally with `apply_patch`, then use `scripts/ssh_push.ps1 -BackupExisting` to upload safely.
-6. Run targeted validation first with `scripts/ssh_exec.ps1`. Broaden scope only if the narrow check passes or the user asks for more.
+5. Use the platform-native fetch/push helpers to copy remote files locally, edit locally with `apply_patch`, then upload safely with backups.
+6. Run targeted validation first with the platform-native exec helper. Broaden scope only if the narrow check passes or the user asks for more.
 7. Report exactly which remote files changed, which backup suffix was created, and which remote commands were run.
 
 ## Workflow
@@ -32,7 +34,7 @@ Assume the remote host is POSIX-like and has `sh`, `cp`, `mv`, `mkdir`, `ssh`, a
   - `git rev-parse --show-toplevel`
   - `pwd`
   - `ls`
-- Use `scripts/ssh_exec.ps1` for remote commands instead of rebuilding ssh flags by hand.
+- Use `python3 scripts/ssh_exec.py ...` on macOS/Linux or `.\scripts\ssh_exec.ps1 ...` in Windows PowerShell instead of rebuilding ssh flags by hand.
 - If the user provides a password instead of a key, pass `-Password` and prefer `user@host` in `-Target`.
 
 ### 2. Stage files locally
@@ -49,7 +51,7 @@ Assume the remote host is POSIX-like and has `sh`, `cp`, `mv`, `mkdir`, `ssh`, a
 
 ### 4. Push safely
 
-- Use `scripts/ssh_push.ps1 -BackupExisting` for normal file updates.
+- Use `python3 scripts/ssh_push.py --backup-existing ...` on macOS/Linux or `.\scripts\ssh_push.ps1 -BackupExisting ...` in Windows PowerShell for normal file updates.
 - The push script uploads to a temporary remote file, optionally creates a timestamped backup, then replaces the target path.
 - Push one file at a time unless the project already has a user-approved sync or deploy mechanism.
 
@@ -69,10 +71,13 @@ Assume the remote host is POSIX-like and has `sh`, `cp`, `mv`, `mkdir`, `ssh`, a
 
 ## Bundled Tools
 
-- `scripts/ssh_exec.ps1`: Run a remote command with consistent ssh options and an optional remote working directory.
-- `scripts/ssh_fetch.ps1`: Copy one remote file to a local staging path.
-- `scripts/ssh_push.ps1`: Upload one local file to a remote path with optional backup and a safe replace sequence.
-- `scripts/ssh_paramiko.py`: Password-capable backend used automatically when `-Password` is supplied.
+- `scripts/ssh_exec.py`: Cross-platform remote command helper for macOS/Linux.
+- `scripts/ssh_fetch.py`: Cross-platform remote file fetch helper for macOS/Linux.
+- `scripts/ssh_push.py`: Cross-platform remote file push helper for macOS/Linux.
+- `scripts/ssh_exec.ps1`: Windows PowerShell remote command helper.
+- `scripts/ssh_fetch.ps1`: Windows PowerShell remote file fetch helper.
+- `scripts/ssh_push.ps1`: Windows PowerShell remote file push helper.
+- `scripts/ssh_paramiko.py`: Password-capable backend used automatically when `--password` or `-Password` is supplied.
 - `references/workflow.md`: Example commands, staging conventions, and common failures.
 
 ## Decision Points

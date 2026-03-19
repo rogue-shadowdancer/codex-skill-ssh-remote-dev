@@ -1,5 +1,7 @@
 # SSH Workflow Recipes
 
+When using the bundled helpers, prefer `python3 scripts/*.py` on macOS/Linux and `.\scripts\*.ps1` in Windows PowerShell.
+
 ## Minimum Inputs
 
 - SSH target or alias
@@ -11,27 +13,30 @@
 
 Use read-only probes first.
 
-```powershell
-scripts/ssh_exec.ps1 -Target app-staging -RemoteDir /srv/app -Command "git status --short"
-scripts/ssh_exec.ps1 -Target app-staging -RemoteDir /srv/app -Command "git branch --show-current"
-scripts/ssh_exec.ps1 -Target app-staging -RemoteDir /srv/app -Command "git rev-parse --show-toplevel"
+```bash
+python3 scripts/ssh_exec.py --target app-staging --remote-dir /srv/app --command "git status --short"
+python3 scripts/ssh_exec.py --target app-staging --remote-dir /srv/app --command "git branch --show-current"
+python3 scripts/ssh_exec.py --target app-staging --remote-dir /srv/app --command "git rev-parse --show-toplevel"
+# Windows PowerShell: .\scripts\ssh_exec.ps1 -Target app-staging -RemoteDir /srv/app -Command "git status --short"
 ```
 
 If the server is password-only, add `-Password` and prefer `user@host` in `-Target`:
 
-```powershell
-scripts/ssh_exec.ps1 -Target radio@10.203.52.6 -Password "<password>" -Command "pwd"
+```bash
+python3 scripts/ssh_exec.py --target radio@10.203.52.6 --password "<password>" --command "pwd"
+# Windows PowerShell: .\scripts\ssh_exec.ps1 -Target radio@10.203.52.6 -Password "<password>" -Command "pwd"
 ```
 
 ## Stage One File Locally
 
 Mirror the remote path under `tmp/ssh-remote-dev/<target>/`.
 
-```powershell
-scripts/ssh_fetch.ps1 `
-  -Target app-staging `
-  -RemotePath /srv/app/src/api/routes.py `
-  -LocalPath tmp/ssh-remote-dev/app-staging/src/api/routes.py
+```bash
+python3 scripts/ssh_fetch.py \
+  --target app-staging \
+  --remote-path /srv/app/src/api/routes.py \
+  --local-path tmp/ssh-remote-dev/app-staging/src/api/routes.py
+# Windows PowerShell: .\scripts\ssh_fetch.ps1 -Target app-staging -RemotePath /srv/app/src/api/routes.py -LocalPath tmp/ssh-remote-dev/app-staging/src/api/routes.py
 ```
 
 After fetching, edit the local staged copy with `apply_patch`.
@@ -40,12 +45,13 @@ After fetching, edit the local staged copy with `apply_patch`.
 
 Use a backup unless the user explicitly says not to.
 
-```powershell
-scripts/ssh_push.ps1 `
-  -Target app-staging `
-  -LocalPath tmp/ssh-remote-dev/app-staging/src/api/routes.py `
-  -RemotePath /srv/app/src/api/routes.py `
-  -BackupExisting
+```bash
+python3 scripts/ssh_push.py \
+  --target app-staging \
+  --local-path tmp/ssh-remote-dev/app-staging/src/api/routes.py \
+  --remote-path /srv/app/src/api/routes.py \
+  --backup-existing
+# Windows PowerShell: .\scripts\ssh_push.ps1 -Target app-staging -LocalPath tmp/ssh-remote-dev/app-staging/src/api/routes.py -RemotePath /srv/app/src/api/routes.py -BackupExisting
 ```
 
 The backup naming pattern is `<remote-path>.bak.<yyyyMMdd-HHmmss>`.
@@ -54,20 +60,22 @@ The backup naming pattern is `<remote-path>.bak.<yyyyMMdd-HHmmss>`.
 
 Start narrow.
 
-```powershell
-scripts/ssh_exec.ps1 `
-  -Target app-staging `
-  -RemoteDir /srv/app `
-  -Command "pytest tests/api/test_routes.py -q"
+```bash
+python3 scripts/ssh_exec.py \
+  --target app-staging \
+  --remote-dir /srv/app \
+  --command "pytest tests/api/test_routes.py -q"
+# Windows PowerShell: .\scripts\ssh_exec.ps1 -Target app-staging -RemoteDir /srv/app -Command "pytest tests/api/test_routes.py -q"
 ```
 
 If the project needs environment setup, include it in the command:
 
-```powershell
-scripts/ssh_exec.ps1 `
-  -Target app-staging `
-  -RemoteDir /srv/app `
-  -Command "source venv/bin/activate && pytest tests/api/test_routes.py -q"
+```bash
+python3 scripts/ssh_exec.py \
+  --target app-staging \
+  --remote-dir /srv/app \
+  --command "source venv/bin/activate && pytest tests/api/test_routes.py -q"
+# Windows PowerShell: .\scripts\ssh_exec.ps1 -Target app-staging -RemoteDir /srv/app -Command "source venv/bin/activate && pytest tests/api/test_routes.py -q"
 ```
 
 ## Dry Run

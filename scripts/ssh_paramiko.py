@@ -1,3 +1,7 @@
+#!/usr/bin/env python3
+
+from __future__ import annotations
+
 import argparse
 import os
 import posixpath
@@ -6,7 +10,13 @@ import sys
 from datetime import datetime
 from typing import Optional
 
-import paramiko
+try:
+    import paramiko
+except ImportError as exc:  # pragma: no cover - import failure path
+    raise SystemExit(
+        "paramiko is required for password-based SSH operations. "
+        "Install it in the current Python environment with: python3 -m pip install paramiko"
+    ) from exc
 
 
 def create_client(host: str, port: int, user: str, password: str) -> paramiko.SSHClient:
