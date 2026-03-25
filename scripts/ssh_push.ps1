@@ -13,6 +13,14 @@ param(
 
     [string]$IdentityFile,
 
+    [string]$ConfigFile,
+
+    [switch]$IdentitiesOnly,
+
+    [string]$SshExecutable,
+
+    [string]$ScpExecutable,
+
     [string]$Username,
 
     [string]$HostName,
@@ -77,18 +85,20 @@ else {
 
 $backupRemotePath = "$RemotePath.bak.$timestamp"
 
-$sshArguments = New-SshBaseArguments -Target $Target -Port $Port -IdentityFile $IdentityFile
-$scpArguments = New-ScpBaseArguments -Port $Port -IdentityFile $IdentityFile
+$sshCommand = Resolve-OpenSshExecutable -DefaultExecutable "ssh.exe" -PreferredExecutable $SshExecutable
+$scpCommand = Resolve-OpenSshExecutable -DefaultExecutable "scp.exe" -PreferredExecutable $ScpExecutable
+$sshArguments = New-SshBaseArguments -Target $Target -Port $Port -IdentityFile $IdentityFile -ConfigFile $ConfigFile -IdentitiesOnly:$IdentitiesOnly
+$scpArguments = New-ScpBaseArguments -Port $Port -IdentityFile $IdentityFile -ConfigFile $ConfigFile -IdentitiesOnly:$IdentitiesOnly
 
 $prepareCommand = Get-RemoteShellCommand -Command "mkdir -p $(Quote-PosixLiteral -Value $remoteDirectory)"
 $prepareArguments = $sshArguments + $prepareCommand
-Invoke-ExternalCommand -Executable "ssh" -Arguments $prepareArguments -DryRun:$DryRun
+Invoke-ExternalCommand -Executable $sshCommand -Arguments $prepareArguments -DryRun:$DryRun
 
 $uploadArguments = $scpArguments + @(
     $LocalPath,
     (Get-RemoteSpec -Target $Target -RemotePath $temporaryRemotePath)
 )
-Invoke-ExternalCommand -Executable "scp" -Arguments $uploadArguments -DryRun:$DryRun
+Invoke-ExternalCommand -Executable $scpCommand -Arguments $uploadArguments -DryRun:$DryRun
 
 $finalizeParts = @()
 
@@ -101,7 +111,7 @@ $finalizeParts += "mv $(Quote-PosixLiteral -Value $temporaryRemotePath) $(Quote-
 
 $finalizeCommand = Get-RemoteShellCommand -Command ($finalizeParts -join "; ")
 $finalizeArguments = $sshArguments + $finalizeCommand
-Invoke-ExternalCommand -Executable "ssh" -Arguments $finalizeArguments -DryRun:$DryRun
+Invoke-ExternalCommand -Executable $sshCommand -Arguments $finalizeArguments -DryRun:$DryRun
 
 if ($BackupExisting) {
     Write-Output "Backup path: $backupRemotePath"

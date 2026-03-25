@@ -12,6 +12,12 @@ param(
 
     [string]$IdentityFile,
 
+    [string]$ConfigFile,
+
+    [switch]$IdentitiesOnly,
+
+    [string]$SshExecutable,
+
     [string]$Username,
 
     [string]$HostName,
@@ -60,7 +66,8 @@ if (-not [string]::IsNullOrWhiteSpace($Password)) {
     return
 }
 
-$arguments = New-SshBaseArguments -Target $Target -Port $Port -IdentityFile $IdentityFile
+$sshCommand = Resolve-OpenSshExecutable -DefaultExecutable "ssh.exe" -PreferredExecutable $SshExecutable
+$arguments = New-SshBaseArguments -Target $Target -Port $Port -IdentityFile $IdentityFile -ConfigFile $ConfigFile -IdentitiesOnly:$IdentitiesOnly
 
 if ($Tty) {
     $arguments = @("-tt") + $arguments
@@ -68,4 +75,4 @@ if ($Tty) {
 
 $arguments += Get-RemoteShellCommand -Command $Command -RemoteDir $RemoteDir
 
-Invoke-ExternalCommand -Executable "ssh" -Arguments $arguments -DryRun:$DryRun
+Invoke-ExternalCommand -Executable $sshCommand -Arguments $arguments -DryRun:$DryRun

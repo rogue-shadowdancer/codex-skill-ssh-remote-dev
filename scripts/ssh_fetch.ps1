@@ -13,6 +13,12 @@ param(
 
     [string]$IdentityFile,
 
+    [string]$ConfigFile,
+
+    [switch]$IdentitiesOnly,
+
+    [string]$ScpExecutable,
+
     [string]$Username,
 
     [string]$HostName,
@@ -62,8 +68,9 @@ if (-not [string]::IsNullOrWhiteSpace($Password)) {
     return
 }
 
-$arguments = New-ScpBaseArguments -Port $Port -IdentityFile $IdentityFile
+$scpCommand = Resolve-OpenSshExecutable -DefaultExecutable "scp.exe" -PreferredExecutable $ScpExecutable
+$arguments = New-ScpBaseArguments -Port $Port -IdentityFile $IdentityFile -ConfigFile $ConfigFile -IdentitiesOnly:$IdentitiesOnly
 $arguments += Get-RemoteSpec -Target $Target -RemotePath $RemotePath
 $arguments += $LocalPath
 
-Invoke-ExternalCommand -Executable "scp" -Arguments $arguments -DryRun:$DryRun
+Invoke-ExternalCommand -Executable $scpCommand -Arguments $arguments -DryRun:$DryRun

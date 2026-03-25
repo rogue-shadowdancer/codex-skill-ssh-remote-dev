@@ -63,6 +63,42 @@ function Get-ParamikoHelperPath {
     return Join-Path $PSScriptRoot "ssh_paramiko.py"
 }
 
+function Resolve-OpenSshExecutable {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$DefaultExecutable,
+
+        [string]$PreferredExecutable
+    )
+
+    if (-not [string]::IsNullOrWhiteSpace($PreferredExecutable)) {
+        return $PreferredExecutable
+    }
+
+    $runningOnWindows = $false
+
+    if ($env:OS -eq "Windows_NT") {
+        $runningOnWindows = $true
+    }
+    elseif ($PSVersionTable.PSVersion.Major -ge 6 -and $IsWindows) {
+        $runningOnWindows = $true
+    }
+
+    if ($runningOnWindows) {
+        $windowsDirectory = $env:WINDIR
+
+        if (-not [string]::IsNullOrWhiteSpace($windowsDirectory)) {
+            $candidatePath = Join-Path $windowsDirectory "System32\OpenSSH\$DefaultExecutable"
+
+            if (Test-Path -LiteralPath $candidatePath -PathType Leaf) {
+                return $candidatePath
+            }
+        }
+    }
+
+    return $DefaultExecutable
+}
+
 function Resolve-TargetConnectionInfo {
     param(
         [Parameter(Mandatory = $true)]
@@ -129,7 +165,11 @@ function New-SshBaseArguments {
 
         [int]$Port,
 
-        [string]$IdentityFile
+        [string]$IdentityFile,
+
+        [string]$ConfigFile,
+
+        [switch]$IdentitiesOnly
     )
 
     $arguments = @(
@@ -145,9 +185,19 @@ function New-SshBaseArguments {
         $arguments += [string]$Port
     }
 
+    if (-not [string]::IsNullOrWhiteSpace($ConfigFile)) {
+        $arguments += "-F"
+        $arguments += $ConfigFile
+    }
+
     if (-not [string]::IsNullOrWhiteSpace($IdentityFile)) {
         $arguments += "-i"
         $arguments += $IdentityFile
+    }
+
+    if ($IdentitiesOnly) {
+        $arguments += "-o"
+        $arguments += "IdentitiesOnly=yes"
     }
 
     $arguments += $Target
@@ -158,7 +208,11 @@ function New-ScpBaseArguments {
     param(
         [int]$Port,
 
-        [string]$IdentityFile
+        [string]$IdentityFile,
+
+        [string]$ConfigFile,
+
+        [switch]$IdentitiesOnly
     )
 
     $arguments = @(
@@ -172,9 +226,19 @@ function New-ScpBaseArguments {
         $arguments += [string]$Port
     }
 
+    if (-not [string]::IsNullOrWhiteSpace($ConfigFile)) {
+        $arguments += "-F"
+        $arguments += $ConfigFile
+    }
+
     if (-not [string]::IsNullOrWhiteSpace($IdentityFile)) {
         $arguments += "-i"
         $arguments += $IdentityFile
+    }
+
+    if ($IdentitiesOnly) {
+        $arguments += "-o"
+        $arguments += "IdentitiesOnly=yes"
     }
 
     return $arguments
